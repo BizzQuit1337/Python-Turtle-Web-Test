@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="filesaver.js"></script>
+    <link rel="stylesheet" type="text/css" href="turtle.css">
+    <title>Upload</title>
+</head>
+<body>
+    <div class="upload-col">
+        <input type='file' accept='text/plain' onchange='openFile(event)' class="upload">
+    </div>
+    <script>
+        var openFile = function(event) {
+        var input = event.target;
+        
+        var reader = new FileReader();
+        reader.onload = function(){
+            var text = reader.result;
+            console.log(reader.result.substring(0, 200));
+            localStorage.setItem('codeSnippets', reader.result);
+            window.close()
+        };
+        reader.readAsText(input.files[0]);
+        };
+    </script>
+</body>
+</html>

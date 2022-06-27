@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="turtle.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.2/codemirror.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.2/codemirror.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.2/theme/ayu-mirage.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.2/mode/python/python.js"></script>
+    <script src="brython-runner.bundle.js"></script>
+    <script src="brython.js"></script>
+    <script src="brython_stdlib.js"></script>
+    <script src="filesaver.js"></script>
+    <title>Turtle</title>
+</head>
+<body onload="brython()">
+    <div class="button-row">
+        <div class="button-col">
+            <button class="button", id="run" onclick=run()>Run
+            <button class="button", onclick=clearConsol()>Clear
+            <button class="button", onclick=save()>Save
+			<button class="button">.
+            <a href="JavaScript:upload('upload.html');">Upload</a>
+        </div>
+    </div>
+    <div class="workspace-row">
+        <div class="editor-col">
+            <textarea class="editor" id="code" rows="18"></textarea>
+        </div>
+        <div class="canvas-col" id="turtle-div" name="turtle-div">
+        </div>
+    </div>
+    <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br> <!--Temporary solution to a problem will get fixed at somepoint-->
+    <div class="console-row">
+        <div class="consol-col" id="consol">
+    </div>
+    </div>
+    <script>
+
+		///setting up code editor
+
+        const codeStoreKey = 'codeSnippets';
+        const loadedCode = localStorage.getItem(codeStoreKey);
+        const editor = CodeMirror.fromTextArea(document.getElementById("code"), {
+            lineNumbers: true,
+            styleActiveLine: true,
+            matchBrackets: true,
+            smartIndent: true,
+            fontSize: 12,
+            tabSize: 4,
+            indentWithTabs: true,
+            lineWrapping: true,
+            autoCloseBrackets: true,
+            mode: 'python',
+            theme: 'ayu-mirage',
+            value: loadedCode,
+        });
+
+        editor.setValue(loadedCode) ///this loads the previously written code into the editor onload
+
+        const runner = new BrythonRunner({
+            stdout: {
+                    write(content) {
+                        var el = document.createElement("code");
+                        var text = document.createTextNode(content);
+                        el.appendChild(text);
+                        document.getElementById('consol').appendChild(el)  ;
+                    },
+                    flush() { }
+                },
+                stderr: {
+                    write(content) {
+                        var el = document.createElement('code');
+                        var text = document.createTextNode(content);
+                        el.appendChild(text);
+						el.setAttribute('class', 'error');
+                        document.getElementById('consol').appendChild(el);
+                    },
+                    flush() { }
+                },
+                stdin: {
+                    async readline() {
+                        var data = prompt();
+                        var el = document.createElement('code');
+                        var text = document.createTextNode(data + '\n');
+                        el.appendChild(text);
+                        document.getElementById('consol').appendChild(el)  ;
+
+                        return data
+                    },
+                }
+        })
+
+		///setting up the functoinality for the button
+
+        function run(){
+            var codeSnippet = editor.getValue();
+            localStorage.setItem(codeStoreKey, codeSnippet);
+            document.getElementById('consol').innerHTML = '';
+            document.getElementById('turtle-div').innerHTML = '';
+            runner.runCode(codeSnippet);
+            //add cache clear
+        }
+
+        function clearConsol(){
+            document.getElementById('consol').innerHTML = '';
+            document.getElementById('turtle-div').innerHTML = '';
+			location.reload();
+        }
+
+        function save(){
+            const codeSnippet = editor.getValue()
+            var file = prompt("Enter file name: ");
+            let blob = new Blob([codeSnippet],
+                {type: "text/plain;charset=utf-8"});
+            saveAs(blob, file);
+        }
+
+        function upload(url){
+			popupWindow = window.open(
+				url,'popUpWindow','height=300,width=400,left=10,top=10,resizable=yes,scrollbars=yes,toolbar=yes,menubar=no,location=no,directories=no,status=yes'
+			);
+			let usrCode = localStorage.getItem('codeSnippet');
+        }
+
+        //catch function for importing turtle 
+        
+    </script>
+    <script type="text/python">
+
+        from browser import document
+        from browser.local_storage import storage
+        import turtle
+
+        turtle.set_defaults(
+                    turtle_canvas_wrapper = document['turtle-div']
+                )
+
+        def pycode(event):
+            code = storage['codeSnippets']
+            document["turtle-div"].innerHTML = ''
+            if code[0:13] == 'import turtle':
+                print(exec(code))
+            else:
+                print('need import turtle in line 1')
+
+        document["run"].bind("click", pycode)
+        
+    </script>
+</body>
+</html>
